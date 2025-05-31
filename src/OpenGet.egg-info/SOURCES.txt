@@ -1,0 +1,11 @@
+README.md
+setup.py
+src/OpenGet.egg-info/PKG-INFO
+src/OpenGet.egg-info/SOURCES.txt
+src/OpenGet.egg-info/dependency_links.txt
+src/OpenGet.egg-info/entry_points.txt
+src/OpenGet.egg-info/requires.txt
+src/OpenGet.egg-info/top_level.txt
+tests/test_downloader.py
+tests/test_integration.py
+tests/test_resume.py
