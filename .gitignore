@@ -2,3 +2,4 @@
 __pycache__/
 *.part
 myenv/
+compare_speed.py

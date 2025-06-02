@@ -35,11 +35,12 @@ def main():
     args = parse_args()
     url = args.url
     output = args.output or derive_filename(url)
-    try:
-        download(url, output, connections=args.connections, resume=args.resume)
-    except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
-        sys.exit(1)
+    download(url, output, connections=args.connections, resume=args.resume)
+    # try:
+    #     download(url, output, connections=args.connections, resume=args.resume)
+    # except Exception as e:
+    #     print(f"Error: {e}", file=sys.stderr)
+    #     sys.exit(1)
 
 if __name__ == '__main__':
     main()

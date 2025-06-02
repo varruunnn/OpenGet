@@ -5,21 +5,21 @@ from .utils import split_ranges, get_file_info, download_whole_file
 from tqdm import tqdm
 
 class SegmentDownloader(threading.Thread):
-    def __init__(self, url, start, end, index, temp_folder, results_dict, retries=3, timeout=(5, 30)):
+    def __init__(self, url, byte_start, byte_end, index, temp_folder, results_dict, retries=3, timeout=(5, 30)):
         super().__init__()
         self.url = url
-        self.start = start
-        self.end = end
+        self.byte_start = byte_start
+        self.byte_end = byte_end
         self.index = index
         self.temp_folder = temp_folder
         self.results = results_dict
         self.retries = retries
         self.timeout = timeout
         self.part_path = os.path.join(temp_folder, f"part_{index}")
-        self.total_downloaded = 0  
+        self.total_downloaded = 0
 
     def run(self):
-        headers = {'Range': f'bytes={self.start}-{self.end}'}
+        headers = {'Range': f'bytes={self.byte_start}-{self.byte_end}'}
         attempt = 0
 
         while attempt < self.retries:
@@ -30,14 +30,15 @@ class SegmentDownloader(threading.Thread):
                     existing_size = 0
 
                 if existing_size > 0:
-                    new_start = self.start + existing_size
-                    if new_start > self.end:
+                    new_start = self.byte_start + existing_size
+                    if new_start > self.byte_end:
                         self.results[self.index] = True
                         return
-                    headers['Range'] = f'bytes={new_start}-{self.end}'
-                    mode = 'ab' 
+                    headers['Range'] = f'bytes={new_start}-{self.byte_end}'
+                    mode = 'ab'
                 else:
                     mode = 'wb'
+
                 with requests.get(self.url, headers=headers, stream=True, timeout=self.timeout) as resp:
                     resp.raise_for_status()
                     with open(self.part_path, mode) as f:
@@ -45,6 +46,7 @@ class SegmentDownloader(threading.Thread):
                             if chunk:
                                 f.write(chunk)
                                 self.total_downloaded += len(chunk)
+
                 self.results[self.index] = True
                 return
 
@@ -81,23 +83,26 @@ def download(url, output_path, connections=4, resume=False):
         print("Server does not support Range requests or single connection specified.")
         download_whole_file(url, output_path)
         return
+
     temp_folder = output_path + '_parts'
     os.makedirs(temp_folder, exist_ok=True)
 
     ranges = split_ranges(total_size, connections)
     results = {i: False for i in range(connections)}
     threads = []
+
     for i, (start, end) in enumerate(ranges):
         seg_thread = SegmentDownloader(
             url=url,
-            start=start,
-            end=end,
+            byte_start=start,
+            byte_end=end,
             index=i,
             temp_folder=temp_folder,
             results_dict=results
         )
         threads.append(seg_thread)
         seg_thread.start()
+
     for t in threads:
         t.join()
 
