@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenGet Web Downloader</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #333;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      padding: 2.5rem;
+      max-width: 600px;
+      width: 90%;
+      margin: 2rem;
+      transition: all 0.3s ease;
+    }
+
+    .container:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    }
+
+    h1 {
+      text-align: center;
+      color: #4a5568;
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #718096;
+      margin-bottom: 2rem;
+      font-size: 1.1rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #4a5568;
+      font-size: 0.95rem;
+    }
+
+    input[type="text"], input[type="number"] {
+      width: 100%;
+      padding: 0.875rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      background: #f8f9fa;
+    }
+
+    input[type="text"]:focus, input[type="number"]:focus {
+      outline: none;
+      border-color: #667eea;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .input-group {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1rem;
+      align-items: end;
+    }
+
+    button {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    #start-button {
+      width: 100%;
+      margin-top: 1rem;
+    }
+
+    #resume-button {
+      background: linear-gradient(135deg, #48bb78, #38a169);
+      box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
+      margin-top: 1rem;
+    }
+
+    #resume-button:hover {
+      box-shadow: 0 6px 20px rgba(72, 187, 120, 0.4);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .error {
+      color: #e53e3e;
+      background: #fed7d7;
+      padding: 0.75rem;
+      border-radius: 8px;
+      margin-top: 0.5rem;
+      font-weight: 500;
+      border-left: 4px solid #e53e3e;
+    }
+
+    .progress-section {
+      text-align: center;
+    }
+
+    .progress-section h2 {
+      color: #4a5568;
+      margin-bottom: 1.5rem;
+      font-size: 1.8rem;
+    }
+
+    .status-card {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      border: 2px solid #e2e8f0;
+    }
+
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+    }
+
+    .status-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .status-label {
+      font-weight: 600;
+      color: #4a5568;
+    }
+
+    .status-value {
+      font-weight: 500;
+      color: #2d3748;
+    }
+
+    .job-id {
+      font-family: 'Courier New', monospace;
+      background: #667eea;
+      color: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+
+    .progress-container {
+      margin: 1.5rem 0;
+    }
+
+    progress {
+      width: 100%;
+      height: 12px;
+      border-radius: 6px;
+      overflow: hidden;
+      -webkit-appearance: none;
+      appearance: none;
+      background: #e2e8f0;
+      margin-bottom: 0.5rem;
+    }
+
+    progress::-webkit-progress-bar {
+      background: #e2e8f0;
+      border-radius: 6px;
+    }
+
+    progress::-webkit-progress-value {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 6px;
+    }
+
+    progress::-moz-progress-bar {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 6px;
+    }
+
+    .percent-text {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #4a5568;
+    }
+
+    .download-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      text-align: center;
+      border: 1px solid #e2e8f0;
+    }
+
+    .stat-label {
+      font-size: 0.875rem;
+      color: #718096;
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-value {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #2d3748;
+    }
+
+    .complete-section {
+      text-align: center;
+      padding: 2rem 0;
+    }
+
+    .complete-section h2 {
+      color: #48bb78;
+      margin-bottom: 1.5rem;
+      font-size: 2rem;
+    }
+
+    .download-link {
+      display: inline-block;
+      background: linear-gradient(135deg, #48bb78, #38a169);
+      color: white;
+      text-decoration: none;
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
+    }
+
+    .download-link:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(72, 187, 120, 0.4);
+    }
+
+    .success-icon {
+      font-size: 4rem;
+      color: #48bb78;
+      margin-bottom: 1rem;
+    }
+
+    @media (max-width: 640px) {
+      .container {
+        padding: 1.5rem;
+        margin: 1rem;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      .input-group {
+        grid-template-columns: 1fr;
+      }
+
+      .download-stats {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>OpenGet</h1>
+    <p class="subtitle">High-speed web downloader with resumable downloads</p>
+
+    <div id="download-form">
+      <div class="form-group">
+        <label for="url-input">File URL</label>
+        <input type="text" id="url-input" placeholder="https://example.com/largefile.zip">
+      </div>
+      
+      <div class="input-group">
+        <div class="form-group">
+          <label for="connections-input">Parallel Connections</label>
+          <input type="number" id="connections-input" value="4" min="1" max="16">
+        </div>
+      </div>
+      
+      <button id="start-button">Start Download</button>
+      <div id="form-error" class="error hidden"></div>
+    </div>
+
+    <div id="progress-section" class="progress-section hidden">
+      <h2>Download Progress</h2>
+      
+      <div class="status-card">
+        <div class="status-row">
+          <span class="status-label">Job ID:</span>
+          <span class="job-id" id="job-id-text">-</span>
+        </div>
+        <div class="status-row">
+          <span class="status-label">Status:</span>
+          <span class="status-value" id="status-text">-</span>
+        </div>
+      </div>
+
+      <div class="progress-container">
+        <progress id="progress-bar" value="0" max="100"></progress>
+        <div class="percent-text" id="percent-text">0%</div>
+      </div>
+
+      <div class="download-stats">
+        <div class="stat-card">
+          <div class="stat-label">Downloaded</div>
+          <div class="stat-value" id="downloaded-text">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Size</div>
+          <div class="stat-value" id="total-text">0</div>
+        </div>
+      </div>
+
+      <div id="error-text" class="error hidden"></div>
+      <button id="resume-button" class="hidden">Resume Download</button>
+    </div>
+
+    <div id="complete-section" class="complete-section hidden">
+      <div class="success-icon">✓</div>
+      <h2>Download Complete!</h2>
+      <a id="download-link" href="#" class="download-link">Download File</a>
+    </div>
+  </div>
+
+  <script>
+    const startButton = document.getElementById("start-button");
+    const resumeButton = document.getElementById("resume-button");
+    const urlInput = document.getElementById("url-input");
+    const connectionsInput = document.getElementById("connections-input");
+    const formError = document.getElementById("form-error");
+
+    const progressSection = document.getElementById("progress-section");
+    const statusText = document.getElementById("status-text");
+    const progressBar = document.getElementById("progress-bar");
+    const percentText = document.getElementById("percent-text");
+    const downloadedText = document.getElementById("downloaded-text");
+    const totalText = document.getElementById("total-text");
+    const errorText = document.getElementById("error-text");
+    const jobIdText = document.getElementById("job-id-text");
+
+    const completeSection = document.getElementById("complete-section");
+    const downloadLink = document.getElementById("download-link");
+
+    let jobId = null;
+    let pollInterval = null;
+
+    function resetUI() {
+      formError.textContent = "";
+      formError.classList.add("hidden");
+      errorText.textContent = "";
+      errorText.classList.add("hidden");
+      statusText.textContent = "";
+      downloadedText.textContent = "0";
+      totalText.textContent = "0";
+      percentText.textContent = "0%";
+      progressBar.value = 0;
+      resumeButton.classList.add("hidden");
+      completeSection.classList.add("hidden");
+      progressSection.classList.add("hidden");
+      document.getElementById("download-form").classList.remove("hidden");
+    }
+
+    function showError(element, message) {
+      element.textContent = message;
+      element.classList.remove("hidden");
+    }
+
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    startButton.addEventListener("click", () => {
+      formError.classList.add("hidden");
+      const url = urlInput.value.trim();
+      const connections = parseInt(connectionsInput.value, 10) || 1;
+      if (!url) {
+        showError(formError, "Please enter a valid URL.");
+        return;
+      }
+      
+      startButton.textContent = "Starting...";
+      startButton.disabled = true;
+      
+      fetch("/api/download", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url, connections })
+      })
+      .then(resp => resp.json().then(data => ({ status: resp.status, body: data })))
+      .then(({ status, body }) => {
+        if (status !== 202) {
+          showError(formError, body.error || "Failed to start download.");
+          startButton.textContent = "Start Download";
+          startButton.disabled = false;
+          return;
+        }
+        jobId = body.job_id;
+        document.getElementById("download-form").classList.add("hidden");
+        progressSection.classList.remove("hidden");
+        progressSection.classList.add("fade-in");
+        jobIdText.textContent = jobId;
+        statusText.textContent = "queued";
+        totalText.textContent = "0";
+        downloadedText.textContent = "0";
+        percentText.textContent = "0%";
+        progressBar.value = 0;
+        pollInterval = setInterval(pollProgress, 1000);
+      })
+      .catch(err => {
+        showError(formError, "Error: " + err);
+        startButton.textContent = "Start Download";
+        startButton.disabled = false;
+      });
+    });
+
+    resumeButton.addEventListener("click", () => {
+      if (!jobId) return;
+      errorText.classList.add("hidden");
+      resumeButton.textContent = "Resuming...";
+      resumeButton.disabled = true;
+      
+      fetch("/api/resume", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ job_id: jobId })
+      })
+      .then(resp => resp.json().then(data => ({ status: resp.status, body: data })))
+      .then(({ status, body }) => {
+        if (status !== 202) {
+          showError(errorText, body.error || "Failed to resume.");
+          resumeButton.textContent = "Resume Download";
+          resumeButton.disabled = false;
+          return;
+        }
+        resumeButton.classList.add("hidden");
+        statusText.textContent = "queued";
+        pollInterval = setInterval(pollProgress, 1000);
+      })
+      .catch(err => {
+        showError(errorText, "Error: " + err);
+        resumeButton.textContent = "Resume Download";
+        resumeButton.disabled = false;
+      });
+    });
+
+    function pollProgress() {
+      if (!jobId) return;
+      fetch(`/api/progress?job_id=${jobId}`)
+        .then(resp => resp.json())
+        .then(data => {
+          if (data.error) {
+            statusText.textContent = "error";
+            showError(errorText, data.error);
+            if (data.can_resume) {
+              resumeButton.classList.remove("hidden");
+              resumeButton.textContent = "Resume Download";
+              resumeButton.disabled = false;
+            }
+            clearInterval(pollInterval);
+            return;
+          }
+          statusText.textContent = data.status;
+          totalText.textContent = formatBytes(data.total_size);
+          downloadedText.textContent = formatBytes(data.downloaded);
+          progressBar.value = data.percent;
+          percentText.textContent = data.percent + "%";
+
+          if (data.status === "complete") {
+            clearInterval(pollInterval);
+            progressSection.classList.add("hidden");
+            completeSection.classList.remove("hidden");
+            completeSection.classList.add("fade-in");
+            downloadLink.href = `/api/file?job_id=${jobId}`;
+            downloadLink.textContent = "Download File";
+          }
+          if (data.status === "error" && data.can_resume) {
+            resumeButton.classList.remove("hidden");
+            resumeButton.textContent = "Resume Download";
+            resumeButton.disabled = false;
+          }
+        })
+        .catch(err => {
+          statusText.textContent = "error";
+          showError(errorText, "Could not fetch progress.");
+          clearInterval(pollInterval);
+        });
+    }
+
+    window.onload = resetUI;
+  </script>
+</body>
+</html>
